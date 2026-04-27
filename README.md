@@ -2,7 +2,7 @@
 
 **Confidential Sealed-Bid Auctions on Arbitrum · Powered by iExec Nox**
 
-ShadowBid is a sealed-bid auction protocol where bid amounts are hidden from all participants using iExec Nox Confidential Tokens. No bidder can see what anyone else has offered. Only the winner is revealed — after everyone has already committed.
+ShadowBid is a sealed-bid auction protocol where bid amounts are hidden from all participants using iExec Nox Confidential Tokens. No bidder can see what anyone else has offered. Only the winner is revealed - after everyone has already committed.
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](LICENSE)
 [![Network: Arbitrum Sepolia](https://img.shields.io/badge/Network-Arbitrum%20Sepolia-blue)](https://sepolia.arbiscan.io)
@@ -14,7 +14,7 @@ ShadowBid is a sealed-bid auction protocol where bid amounts are hidden from all
 
 Every existing on-chain auction is public. When you bid, everyone watching the chain can see your amount. Later bidders outbid you by the smallest possible increment. This breaks the core promise of a sealed-bid auction.
 
-ShadowBid fixes this: bids are committed as hashes, and winning payouts are wrapped into iExec Nox Confidential Tokens — so the settlement amount is never exposed on the public ledger.
+ShadowBid fixes this: bids are committed as hashes, and winning payouts are wrapped into iExec Nox Confidential Tokens - so the settlement amount is never exposed on the public ledger.
 
 ---
 
@@ -37,7 +37,7 @@ salt, address)         (amount + salt)
 
 ### iExec Nox Integration
 
-At settlement, the winning USDC amount is wrapped into an iExec Nox Confidential Token via `IConfidentialWrapper.wrap()`. The auctioneer receives a confidential token — the settlement amount is hidden from the public ledger. This is the core Nox integration: the winning bid becomes a private, auditable, confidential asset.
+At settlement, the winning USDC amount is wrapped into an iExec Nox Confidential Token via `IConfidentialWrapper.wrap()`. The auctioneer receives a confidential token - the settlement amount is hidden from the public ledger. This is the core Nox integration: the winning bid becomes a private, auditable, confidential asset.
 
 ---
 
@@ -114,19 +114,19 @@ npx hardhat ignition deploy ignition/modules/ShadowBid.ts --network arbitrumSepo
 
 ## Demo Flow
 
-1. **Create auction** — set item name, reserve price, bid duration, reveal duration
-2. **Wallet A bids** — enters 250 USDC, app generates salt and commitment hash, submits on-chain
-3. **Wallet B bids** — enters 180 USDC — neither bidder sees the other's amount
-4. **Bid phase ends** — anyone calls `openRevealPhase()`
-5. **Both wallets reveal** — submit `(amount, salt)`, contract verifies hashes
-6. **Settle** — Wallet A wins (highest reveal), auctioneer receives 250 USDC wrapped as cToken
-7. **Wallet B claims refund** — 180 USDC returned
+1. **Create auction** - set item name, reserve price, bid duration, reveal duration
+2. **Wallet A bids** - enters 250 USDC, app generates salt and commitment hash, submits on-chain
+3. **Wallet B bids** - enters 180 USDC — neither bidder sees the other's amount
+4. **Bid phase ends** - anyone calls `openRevealPhase()`
+5. **Both wallets reveal** - submit `(amount, salt)`, contract verifies hashes
+6. **Settle** - Wallet A wins (highest reveal), auctioneer receives 250 USDC wrapped as cToken
+7. **Wallet B claims refund** - 180 USDC returned
 
 ---
 
 ## Why iExec Nox
 
-Standard on-chain auctions expose every bid publicly. iExec Nox Confidential Tokens give us hidden balances via Trusted Execution Environments — settlement amounts are processed without appearing as plaintext on the public chain.
+Standard on-chain auctions expose every bid publicly. iExec Nox Confidential Tokens give us hidden balances via Trusted Execution Environments - settlement amounts are processed without appearing as plaintext on the public chain.
 
 This makes ShadowBid's privacy guarantee cryptographically enforced at the settlement layer, not just a front-end convention.
 
