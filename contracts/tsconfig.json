@@ -1,0 +1,17 @@
+/* Based on https://github.com/tsconfig/bases/blob/501da2bcd640cf95c95805783e1012b992338f28/bases/node22.json */
+{
+  "compilerOptions": {
+    "target": "ES2021",
+    "module": "NodeNext",
+    "moduleResolution": "NodeNext",
+    "esModuleInterop": true,
+    "strict": true,
+    "resolveJsonModule": true,
+    "outDir": "dist",
+    "declaration": true,
+    "skipLibCheck": true,
+    "types": ["node", "mocha"]
+  },
+  "include": ["hardhat.config.ts", "contracts/**/*.ts", "test/**/*.ts", "scripts/**/*.ts", "ignition/**/*.ts"],
+  "exclude": ["node_modules", "dist", "artifacts", "cache"]
+}

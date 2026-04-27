@@ -1,0 +1,52 @@
+{
+  "_format": "hh3-sol-build-info-1",
+  "id": "solc-0_8_28-2fe62065a0a2eb69e0662e1192821bb74d6e2c33",
+  "solcVersion": "0.8.28",
+  "solcLongVersion": "0.8.28+commit.7893614a",
+  "compilerType": "solc",
+  "toolVersions": {
+    "hardhat": "3.4.0"
+  },
+  "userSourceNameMap": {
+    "contracts/mocks/MockConfidentialWrapper.sol": "project/contracts/mocks/MockConfidentialWrapper.sol"
+  },
+  "input": {
+    "language": "Solidity",
+    "settings": {
+      "evmVersion": "cancun",
+      "optimizer": {
+        "enabled": true,
+        "runs": 200
+      },
+      "outputSelection": {
+        "*": {
+          "": [
+            "ast"
+          ],
+          "*": [
+            "abi",
+            "evm.bytecode.linkReferences",
+            "evm.bytecode.object",
+            "evm.bytecode.opcodes",
+            "evm.bytecode.sourceMap",
+            "evm.deployedBytecode.immutableReferences",
+            "evm.deployedBytecode.linkReferences",
+            "evm.deployedBytecode.object",
+            "evm.deployedBytecode.opcodes",
+            "evm.deployedBytecode.sourceMap",
+            "evm.methodIdentifiers"
+          ]
+        }
+      },
+      "remappings": []
+    },
+    "sources": {
+      "project/contracts/interfaces/IConfidentialWrapper.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\ninterface IConfidentialWrapper {\n    function wrap(address to, uint256 amount) external returns (bytes32);\n    function underlying() external view returns (address);\n    event Wrapp(address indexed to, uint256 amount);\n}"
+      },
+      "project/contracts/mocks/MockConfidentialWrapper.sol": {
+        "content": "// SPDX-License-Identifier: MIT\npragma solidity ^0.8.28;\n\nimport {IConfidentialWrapper} from \"../interfaces/IConfidentialWrapper.sol\";\n\ninterface IERC20 {\n    function transferFrom(address from, address to, uint256 amount) external returns (bool);\n    function balanceOf(address account) external view returns (uint256);\n}\n\ncontract MockConfidentialWrapper is IConfidentialWrapper {\n    address private _underlying;\n\n    mapping(address => uint256) public confidentialBalanceOf;\n\n    constructor(address underlying_) {\n        _underlying = underlying_;\n    }\n\n    function underlying() external view returns (address) {\n        return _underlying;\n    }\n\n    function wrap(address to, uint256 amount) external returns (bytes32) {\n        require(\n            IERC20(_underlying).transferFrom(msg.sender, address(this), amount),\n            \"Tranfer failed\"\n        );\n        confidentialBalanceOf[to] += amount;\n        bytes32 handle = keccak256(abi.encodePacked(to, amount, block.timestamp));\n        emit Wrapp(to, amount);\n        return handle;\n    }\n}"
+      }
+    }
+  }
+}
