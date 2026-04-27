@@ -88,7 +88,7 @@ OPEN → (bid deadline) → REVEAL → (reveal deadline) → SETTLED
 ### Install
 
 ```bash
-git clone https://github.com/your-username/shadowbid.git
+git clone https://github.com/Ted1166/shadowbid.git
 cd shadowbid/contracts
 npm install
 ```
