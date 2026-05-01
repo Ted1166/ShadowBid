@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { ethers } from "ethers";
 import { useFactory, useCreateAuction } from "../hooks/useAuction";
 import { STATUS, STATUS_COLOR, fmt, countdown } from "../config/contracts";
@@ -13,21 +13,23 @@ interface AuctionCardProps {
 function AuctionCard({ vaultAddress, provider, onClick }: AuctionCardProps) {
   const [info, setInfo] = useState<any>(null);
 
-  useState(() => {
+  useEffect(() => {
     const vault = new ethers.Contract(vaultAddress, [
       "function getInfo() external view returns (address, string, string, uint256, uint256, uint256, uint8, uint256, address, uint256)",
     ], provider);
     vault.getInfo().then((raw: any) => {
+      const parsed = (() => { try { return JSON.parse(raw[2]); } catch { return {}; } })();
       setInfo({
-        itemName:     raw[1],
-        itemDescription: raw[2],
-        reservePrice: raw[3],
-        bidDeadline:  Number(raw[4]),
-        status:       Number(raw[6]),
-        bidderCount:  Number(raw[7]),
+        itemName:        raw[1],
+        itemDescription: parsed.desc || raw[2],
+        parsedImage:     parsed.image || null,
+        reservePrice:    raw[3],
+        bidDeadline:     Number(raw[4]),
+        status:          Number(raw[6]),
+        bidderCount:     Number(raw[7]),
       });
     }).catch(() => {});
-  });
+  }, [vaultAddress, provider]);
 
   if (!info) return <div style={styles.cardSkeleton} />;
 
@@ -36,6 +38,11 @@ function AuctionCard({ vaultAddress, provider, onClick }: AuctionCardProps) {
 
   return (
     <div style={styles.card} onClick={onClick}>
+      {info.parsedImage && (
+        <img src={info.parsedImage} alt={info.itemName}
+          style={{ width: "100%", height: 130, objectFit: "cover", borderRadius: 8, marginBottom: 10 }}
+          onError={e => (e.currentTarget.style.display = "none")} />
+      )}
       <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start" }}>
         <h3 style={styles.cardTitle}>{info.itemName}</h3>
         <span style={{ ...styles.badge, background: STATUS_COLOR[info.status] + "22", color: STATUS_COLOR[info.status] }}>
@@ -68,19 +75,27 @@ export default function Home({ wallet, onSelectAuction }: Props) {
   const [form, setForm] = useState({
     itemName: "", itemDescription: "", reservePrice: "",
     bidHours: "24", revealHours: "6",
+    imageUrl: "", condition: "",
   });
 
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
+    const description = JSON.stringify({
+      desc: form.itemDescription,
+      image: form.imageUrl,
+      condition: form.condition,
+    });
+
     const vault = await create(
       form.itemName,
-      form.itemDescription,
+      description,
+      // form.itemDescription,
       ethers.parseUnits(form.reservePrice, 6),
       Number(form.bidHours) * 3600,
       Number(form.revealHours) * 3600,
     );
     if (vault) {
-      setForm({ itemName: "", itemDescription: "", reservePrice: "", bidHours: "24", revealHours: "6" });
+      setForm({ itemName: "", itemDescription: "", reservePrice: "", bidHours: "24", revealHours: "6", imageUrl: "", condition: "" });
       reload();
     }
   };
@@ -93,8 +108,24 @@ export default function Home({ wallet, onSelectAuction }: Props) {
           <form onSubmit={handleCreate} style={styles.form}>
             <input style={styles.input} required placeholder="Item name" value={form.itemName}
               onChange={e => setForm(f => ({ ...f, itemName: e.target.value }))} />
-            <textarea style={{ ...styles.input, height: 72 }} placeholder="Description" value={form.itemDescription}
-              onChange={e => setForm(f => ({ ...f, itemDescription: e.target.value }))} />
+            <textarea
+              style={{ ...styles.input, height: 72 }}
+              placeholder="Describe the item being auctioned"
+              value={form.itemDescription}
+              onChange={e => setForm(f => ({ ...f, itemDescription: e.target.value }))}
+            />
+            <input
+              style={styles.input}
+              placeholder="Image URL (optional)"
+              value={form.imageUrl}
+              onChange={e => setForm(f => ({ ...f, imageUrl: e.target.value }))}
+            />
+            <input
+              style={styles.input}
+              placeholder="Condition (e.g. Excellent, Used, New)"
+              value={form.condition}
+              onChange={e => setForm(f => ({ ...f, condition: e.target.value }))}
+            />
             <div style={{ display: "flex", gap: 12 }}>
               <input style={styles.input} required type="number" placeholder="Reserve price (USDC)" value={form.reservePrice}
                 onChange={e => setForm(f => ({ ...f, reservePrice: e.target.value }))} />

@@ -8,9 +8,19 @@ interface Props {
   vaultAddress: string;
   wallet: WalletState;
   onBack: () => void;
+  onViewSeller: (addr: string) => void;
 }
 
-export default function AuctionDetail({ vaultAddress, wallet, onBack }: Props) {
+function parseDescription(raw: string) {
+  try {
+    const parsed = JSON.parse(raw);
+    return { desc: parsed.desc || raw, image: parsed.image || null, condition: parsed.condition || null };
+  } catch {
+    return { desc: raw, image: null, condition: null };
+  }
+}
+
+export default function AuctionDetail({ vaultAddress, wallet, onBack, onViewSeller }: Props) {
   const {
     info, loading, txLoading, error,
     hasBid, hasReveal, storedSalt, storedAmount, usdcBalance,
@@ -58,7 +68,22 @@ export default function AuctionDetail({ vaultAddress, wallet, onBack }: Props) {
             {STATUS[info.status]}
           </span>
         </div>
-        <p style={styles.desc}>{info.itemDescription}</p>
+        {(() => {
+          const { desc, image, condition } = parseDescription(info.itemDescription);
+          return (
+            <>
+              {image && (
+                <img src={image} alt={info.itemName}
+                  style={{ width: "100%", maxHeight: 260, objectFit: "cover", borderRadius: 8, marginBottom: 12 }}
+                  onError={e => (e.currentTarget.style.display = "none")} />
+              )}
+              <p style={styles.desc}>{desc}</p>
+              {condition && (
+                <span style={styles.conditionBadge}>Condition: {condition}</span>
+              )}
+            </>
+          );
+        })()}
         <div style={styles.grid}>
           <div><p style={styles.label}>Reserve</p><p style={styles.value}>{fmt(info.reservePrice)}</p></div>
           <div><p style={styles.label}>Bidders</p><p style={styles.value}>{info.bidderCount}</p></div>
@@ -70,6 +95,18 @@ export default function AuctionDetail({ vaultAddress, wallet, onBack }: Props) {
               <div><p style={styles.label}>Winning bid</p><p style={styles.value}>{fmt(info.winningAmount)}</p></div>
             </>
           )}
+        </div>
+        <div style={{ display: "flex", gap: 12, alignItems: "center", marginTop: 8 }}>
+          <button
+            onClick={() => onViewSeller(info.auctioneer)}
+            style={{ background: "none", border: "none", color: "#7c3aed", fontSize: 12, cursor: "pointer", padding: 0 }}
+          >
+            View seller profile →
+          </button>
+          <a href={`https://sepolia.arbiscan.io/address/${info.auctioneer}`}
+            target="_blank" style={{ color: "#6b7280", fontSize: 12 }}>
+            Arbiscan ↗
+          </a>
         </div>
       </div>
 
@@ -169,4 +206,5 @@ const styles: Record<string, React.CSSProperties> = {
   winnerBanner: { background: "#14532d", border: "1px solid #16a34a", borderRadius: 12, padding: 16, textAlign: "center", color: "#86efac", fontWeight: 600, marginBottom: 16 },
   infoBanner:  { background: "#1f2937", border: "1px solid #374151", borderRadius: 12, padding: 16, color: "#9ca3af", fontSize: 14, marginBottom: 16 },
   errorBox:    { background: "#450a0a", border: "1px solid #dc2626", borderRadius: 8, padding: "12px 16px", color: "#f87171", fontSize: 13, marginBottom: 16 },
+  conditionBadge: { display: "inline-block", background: "#1f2937", border: "1px solid #374151", borderRadius: 6, padding: "3px 10px", fontSize: 12, color: "#9ca3af", marginBottom: 16 },
 };

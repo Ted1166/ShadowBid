@@ -55,7 +55,12 @@ export function useCreateAuction(signer: ethers.JsonRpcSigner | null) {
     setCreating(true); setError(null);
     try {
       const f  = new ethers.Contract(ADDRESSES.factory, FACTORY_ABI, signer);
-      const tx = await f.createAuction(itemName, itemDescription, reservePrice, bidDuration, revealDuration);
+      const feeData = await signer.provider!.getFeeData();
+      const gas = {
+        maxFeePerGas: feeData.maxFeePerGas ? feeData.maxFeePerGas * 3n : undefined,
+        maxPriorityFeePerGas: feeData.maxPriorityFeePerGas,
+      };
+      const tx = await f.createAuction(itemName, itemDescription, reservePrice, bidDuration, revealDuration, gas);
       const receipt = await tx.wait();
       const iface   = new ethers.Interface(FACTORY_ABI);
       const log     = receipt.logs.map((l: any) => { try { return iface.parseLog(l); } catch { return null; } }).find((e: any) => e?.name === "AuctionCreated");

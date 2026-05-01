@@ -1,24 +1,45 @@
-import { useState } from "react";
 import { useWallet } from "./hooks/useWallet";
+import { useNavigate, useParams, Routes, Route } from "react-router-dom";
 import Home from "./pages/Home";
 import AuctionDetail from "./pages/AuctionDetail";
+import SellerProfile from "./pages/SellerProfile";
+
+function AuctionWrapper({ wallet }: { wallet: any }) {
+  const { id } = useParams<{ id: string }>();
+  const navigate = useNavigate();
+  return <AuctionDetail vaultAddress={id!} wallet={wallet} onBack={() => navigate("/")} onViewSeller={addr => navigate(`/seller/${addr}`)} />;
+}
+
+function SellerWrapper({ wallet }: { wallet: any }) {
+  const { address } = useParams<{ address: string }>();
+  const navigate = useNavigate();
+  return <SellerProfile sellerAddress={address!} wallet={wallet} onSelectAuction={addr => navigate(`/auction/${addr}`)} onBack={() => navigate(-1)} />;
+}
 
 export default function App() {
   const wallet = useWallet();
-  const [selectedAuction, setSelectedAuction] = useState<string | null>(null);
+  const navigate = useNavigate();
 
   return (
     <div style={{ minHeight: "100vh", background: "#030712", color: "#f9fafb", fontFamily: "system-ui, sans-serif" }}>
       <header style={styles.header}>
-        <div>
-          <h1 style={styles.logo}>ShadowBid</h1>
-          <p style={styles.tagline}>Confidential sealed-bid auctions · iExec Nox</p>
+        <div style={{ display: "flex", alignItems: "center", gap: 10 }}>
+          <img src="/logo.svg" alt="ShadowBid" style={{ width: 36, height: 36 }} />
+          <div>
+            <h1 style={styles.logo}>ShadowBid</h1>
+            <p style={styles.tagline}>Confidential sealed-bid auctions · iExec Nox</p>
+          </div>
         </div>
         <div style={{ display: "flex", alignItems: "center", gap: 12 }}>
           {wallet.address ? (
-            <div style={styles.addressPill}>
-              <span style={styles.dot} />
-              {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
+            <div style={{ display: "flex", alignItems: "center", gap: 8 }}>
+              <div style={styles.addressPill}>
+                <span style={styles.dot} />
+                {wallet.address.slice(0, 6)}…{wallet.address.slice(-4)}
+              </div>
+              <button style={styles.disconnectBtn} onClick={wallet.disconnect}>
+                Disconnect
+              </button>
             </div>
           ) : (
             <button style={styles.connectBtn} onClick={wallet.connect}>
@@ -36,18 +57,11 @@ export default function App() {
         <div style={styles.errorBanner}>Wrong network. Please switch to Arbitrum Sepolia.</div>
       )}
 
-      {selectedAuction ? (
-        <AuctionDetail
-          vaultAddress={selectedAuction}
-          wallet={wallet}
-          onBack={() => setSelectedAuction(null)}
-        />
-      ) : (
-        <Home
-          wallet={wallet}
-          onSelectAuction={setSelectedAuction}
-        />
-      )}
+      <Routes>
+        <Route path="/" element={<Home wallet={wallet} onSelectAuction={addr => navigate(`/auction/${addr}`)} />} />
+        <Route path="/auction/:id" element={<AuctionWrapper wallet={wallet} />} />
+        <Route path="/seller/:address" element={<SellerWrapper wallet={wallet} />} />
+      </Routes>
     </div>
   );
 }
@@ -63,6 +77,15 @@ const styles: Record<string, React.CSSProperties> = {
     top: 0,
     background: "#030712",
     zIndex: 10,
+  },
+  disconnectBtn: {
+    background: "none",
+    border: "1px solid #374151",
+    borderRadius: 8,
+    padding: "6px 12px",
+    fontSize: 12,
+    color: "#9ca3af",
+    cursor: "pointer",
   },
   logo:       { fontSize: 20, fontWeight: 700, margin: 0, letterSpacing: "-0.02em" },
   tagline:    { fontSize: 12, color: "#6b7280", margin: "2px 0 0" },
